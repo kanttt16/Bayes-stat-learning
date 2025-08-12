@@ -1,0 +1,112 @@
+---
+title: "Bayes stat"
+author: "kanttt"
+date: "2025-08-12"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 前言
+
+这个月主要在学贝叶斯统计的先验分布以及共轭先验的概念，虽然没学多少但也足够聊以慰无了
+
+这篇文档主要是复习贝叶斯统计中的基本概念以及从共轭先验出发揭示指数族分布间的关系，再加上好久没有用rmarkdown写东西，顺便复习一下markdown的书写习惯
+
+公式及部分定义来自于 $贝叶斯统计–茆诗松$、 Bayes Data Analysis–Gelman
+
+# 第一节
+
+## 全概率公式和贝叶斯公式
+
+这个东西高中概率有讲过，当我们指定 $\Omega$ 可以由 n个事件的并：$\bigcup_{i=1}^n B_i$ 表示，且 $B_i$ 间相互独立，
+
+就有 $P(A) = \sum_{i=1}^n P(A|B_i) \cdot P(B_i)$ 这就是全概率公式
+
+显然我们可以把它理解成：当我们把 $\Omega$ 划分为互不相交的n个子集时，对于事件 $A$ 的概率可以用全概率公式重新阐述，它同时反映着事件 $A$ 与各个子集的相交情况和 $A$ 与 $\Omega$ 的相交情况
+
+由此引出 $Bayes 定理$ ：
+
+$$
+P(B_i \mid A) = \frac{P(A \mid B_i) \cdot P(B_i)}{\sum_{j=1}^n P(A|B_j) \cdot P(B_j)}
+$$
+
+它代表我们感兴趣的目标从 $A$ 转到了 $B_i$ 身上，从 $A$ 事件既定发生的条件下讲， $B_i$ 们的发生情况
+
+# 先验分布与后验分布
+
+贝叶斯学派和频率学派的分歧点就在这上，在贝叶斯中认为，当我们对模型进行推断的时候往往是根据经验进行判断的，你觉得这个先验服从什么分布，他就是什么分布。当然，你可能觉得他是一个很虚无飘渺的东西，但是仔细想一想，我们或者某人对某事做决策的时候，几乎或者说必然是受到唯心经验的影响
+
+更通俗点，我们可以把先验理解为：**一个人的主观概率就是对某一事实的真实性度量**
+
+一般地，我们从已经知道或者给出的分布函数提取出n个样本，记
+
+$$
+x = (x_1,x_2,...,x_n)
+$$
+
+我们定义似然函数为
+
+$$
+P(x|\theta) = \prod_{i=1}^n P(X=x_i|\theta)
+$$
+
+直观上看，似然函数联合了从 $x_1到x_n$ 的所有条件概率
+
+先验概率记为 $\pi(\theta)$
+
+则后验分布为
+
+$$
+P(\theta|x) = \frac{P(x|\theta) \cdot \pi(\theta)}{\int_\theta P(x|\theta) \cdot \pi(\theta) d\theta}
+$$
+
+## Beta分布
+
+在引入下一小节内容（指数族与共轭分布）之前，我们有必要学习**Beta**分布，它与**Gamma分布**是后续一切推论的基石
+
+以抛硬币来说，我们假设现在抛A+B次正面向上的次数为A，对于这个事实，我可以理所当然地说每次抛硬币正面向上的概率为 $P =\frac{A}{A+B}$ 吗，其实不太行，在统计上讲，这不属于无偏估计。
+
+那么，假设对这个硬币的一切参数一无所知，那么我们没有任何证据证明硬币抛遗传正面向上的概率是多少，所以索性我们假定：**P从0取到1的概率等可能**
+
+此时回到一开始的情景，向上次数为A，按照似然估计的想法，参数 $\theta$ 决定P的准确与否的靠谱程度。换句话说，在P不知道的情况下，我们假定 $\theta$ 是众多P最准确的那个
+
+那么
+
+$$
+P(A|\theta) = C_{A+B}^A \theta^A \cdot (1-\theta)^B
+$$
+
+于是有
+
+$$
+f(\theta) = C_{A+B}^A \theta^A \cdot (1-\theta)^B  ,  \theta \in [0,1]
+$$ 这就是“硬币模型”的概率分布
+
+那么根据定义，分布模型除以模型在0到1上的积分就是概率密度
+
+$$
+P(\theta) = \frac{C_{A+B}^A \theta^A \cdot (1-\theta)^B}{C_{A+B}^A\int_0^1  \theta^A \cdot (1-\theta)^B d\theta}
+$$
+
+令 $A=\alpha-1,B=\beta-1,\theta=x$
+
+那么我们就得到了传统的Beta书写：
+
+$$
+f(x;\alpha,\beta)=\frac{x^{\alpha-1} \cdot (1-x)^{\beta-1}}{\int_0^1 u^{\alpha-1} (1-u)^{\beta-1}du}
+$$
+
+而根据Beta函数性质
+
+$$
+B(\alpha,\beta)=\int_0^1 u^{\alpha-1} (1-u)^{\beta-1}du =\frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}
+$$ 于是
+
+$$
+f(x;\alpha,\beta)=x^{\alpha-1} \cdot (1-x)^{\beta-1} \cdot \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}
+$$
